@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% for dataset in datasets.object_list %}
+<div class="row data-container">
+	<div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+	<div class="col-xl-10 col-lg-10 col-md-10 col-sm-10 col-xs-10 dataset-detail">
+		{{ dataset.title }},
+		Private: {{ dataset.private }}
+	</div>
+	<div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+</div>
+{% endfor %}
+<nav aria-label="...">
+  <ul class="pagination">
+    <li class="page-item {% if not prev_page_url %} disabled {% endif %}">
+      <a class="page-link" href="{{ prev_page_url }}" tabindex="-1">Previous</a>
+    </li>
+    {% for n in datasets.paginator.page_range %}
+    	{% if datasets.number == n %}
+	    	<li class="page-item">
+	    		<a class="page-link" href="?page={{ n }}">{{ n }}<span class="sr-only">(current)</span></a>
+	    	</li>
+    	{% elif n > datasets.number|add:-3 and n < datasets.number|add:3 %}
+				<li class="page-item">
+    			<a class="page-link" href="?page={{ n }}">{{ n }}</a>
+    		</li>
+    	{% endif %}
+    {% endfor %}
+    	<li class="page-item {% if not next_page_url %} disabled {% endif %}">
+      	<a class="page-link" href="{{ next_page_url }}">Next</a>
+    	</li>
+  </ul>
+</nav>
+
+{% endblock %}

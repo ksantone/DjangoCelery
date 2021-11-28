@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="row data-container">
+	<div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+	<div class="col-xl-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 datasets">
+		<h1>My Datasets</h1>
+		{% for dataset in datasets %}
+			{{ dataset.title }}
+		{% endfor %}
+		<button type="submit" class="btn btn-primary"><a href="{% url 'my_datasets_view' %}">See All Datasets</a></button>
+	</div>
+	<div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-xs-2"></div>
+	<div class="col-xl-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 experiment-results">
+		<h1>My Experiment Results</h1>
+		Experiment Result 1
+		Experiment Result 2
+		Experiment Result 3
+	</div>
+	<div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+</div>
+
+{% endblock %}

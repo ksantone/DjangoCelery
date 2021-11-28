@@ -1,0 +1,64 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="{% static 'js/script.js' %}" defer></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abel">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet">
+
+    <style>
+        .brand-title a { 
+            color: black;
+            font-family: "Abel";
+        } /* CSS link color */
+    </style>
+
+    <title>Fibonacci - Integrated Biotech</title>
+  </head>
+  <body onresize="{% if 'pipelines' in request.path and 'execute' in request.path %}resize_graph(){% endif %}" onload="{% if 'pipelines' in request.path and 'execute' in request.path %}load_pipeline_tree(true){% endif %}">
+    <!-- Header section starts -->
+    <header class="header">
+        <a href="{% url 'home_page_view' %}" class="fibonacci">fibonacci</a>
+        <div class="fas fa-bars"></div>
+        <nav class="navbar">
+            <ul class="nav-items">
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'pipelines:pipeline_list_view' %}">Pipelines</a></li>
+                    <li><a href="{% url 'logout_page_view' %}">Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'login_page_view' %}">Login</a></li>
+                    <li><a href="{% url 'register_page_view' %}">Register</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    <!-- Header section ends -->
+    {% block content %}
+        Replace me!
+    {% endblock %}
+    <!-- Footer section starts -->
+    <section class="footer">
+        <h1 class="footer-text">Created by the Fibonacci team | All rights reserved.</h1>
+        <div class="icons">
+            <a href="#" class="fab fa-facebook-f"></a>
+            <a href="#" class="fab fa-twitter"></a>
+            <a href="#" class="fab fa-instagram"></a>
+        </div>
+    </section>
+    <!-- Footer section ends -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  </body>
+</html>
