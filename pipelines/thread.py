@@ -3,7 +3,7 @@ import base64, struct, xml.etree.ElementTree as ET
 import os.path
 import json
 from pathlib import Path
-from bs4 import BeautifulSoup as bs
+#from bs4 import BeautifulSoup as bs
 from django.core.files import File
 from django.conf import settings
 from queue import Queue
@@ -12,6 +12,8 @@ from queue import Queue
 from celery import shared_task
 #from celery.task import Task
 from celery_progress.backend import ProgressRecorder
+
+import redis
 
 #from algorithm_progresses.models import AlgorithmProgress
 from time import sleep
@@ -22,6 +24,7 @@ class CreatePipelineTasks(threading.Thread):
     algorithms = []
     inputs = []
     queue = Queue()
+    completed_tasks = Queue()
     def __init__(self, title, algorithms, inputs, queue):
         self.title = title
         self.algorithms = algorithms
@@ -55,9 +58,14 @@ class CreatePipelineTasks(threading.Thread):
             #algorithms_to_task_ids["Spectral"] = processor.task_id
             print("Why?")
             print(processes)
+            r = redis.Redis(host='127.0.0.1', port=6379)
+            print(r)
+            r.set("DeNovo", "Incomplete")
+            r.set("Database", "Incomplete")
             for process in processes:
-                task = run_pipeline.delay(process[0])
-                algorithms_to_task_ids[process[0].split("\\")[-1]] = task.task_id
+                task = run_pipeline.delay(process[0], r)
+                print(process[0])
+                algorithms_to_task_ids[process[0].split("/")[-1]] = task.task_id
                 self.queue.put(algorithms_to_task_ids)
             print("And how?")
         except Exception as e:
@@ -112,7 +120,7 @@ def add_algorithm_to_file(algorithm, processes):
     algorithm_to_executable = {"DeNovo": "DeNovoSequencingAlgorithm.exe", "Database": "DatabaseSearchAlgorithm.exe", "FDR": "FDR.exe"}
     print("Huh?")
     print(algorithm_to_executable)
-    algorithm_reqs = [settings.STATICFILES_DIRS[0]+"\\algorithms\\"+algorithm_to_executable[algorithm]]
+    algorithm_reqs = [settings.STATICFILES_DIRS[0]+"/algorithms/"+algorithm_to_executable[algorithm]]
     print("Adding algorithms.")
     if algorithm=="DeNovo":
         processes.append([algorithm_reqs[0]])#, os.path.join(base_dir, "spectrum_list_29.txt")])
@@ -120,13 +128,19 @@ def add_algorithm_to_file(algorithm, processes):
         processes.append([algorithm_reqs[0]])
 
 @shared_task(bind=True)
-def run_pipeline(self, process):
+def run_pipeline(self, process, r):
     print("Inside")
+    if process.split("/")[-1]=="DeNovoSequencingAlgorithm.exe":
+        m = 5
+    else:
+        while r.get("DeNovo")=="Incomplete":
+            m = 6
     progress_recorder = ProgressRecorder(self)
     for i in range(10):
         sleep(10)
         progress_recorder.set_progress(i+1, 10, f'On iteration {i}.')
         print(i)
+    r.set("DeNovo")=="Complete"
     return "Done"
     '''print(process)
     if len(process)==2:

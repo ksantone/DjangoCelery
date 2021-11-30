@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+<section id="pipelines" class="pipelines">
+	<style>
+		rect {
+			fill: white;
+			stroke: silver;
+			width: 140px;
+			height: 180px;
+			stroke-width: 2px;
+		}
+		path {
+			fill: none;
+			stroke: silver;
+			stroke-width: 2px;
+		}
+		text {
+			dominant-baseline: middle;
+			text-anchor: middle;
+			font-size: 24px;
+		}
+		.bigger {
+			font-size: 18px;
+		}
+		#svg-container {
+			position: relative;
+		}
+		div#progress-bar-Spectral.progress-bar, div#progress-bar-DeNovo.progress-bar, div#progress-bar-Database.progress-bar {
+			position: absolute;
+			height: 20px;
+		}
+		div#progress-message-Spectral, div#progress-message-DeNovo, div#progress-message-Database {
+			position: absolute;
+		}
+		.progress-wrapper {
+
+		}
+		.pipeline-execution {
+			z-index: -1;
+		}
+	</style>
+	<div class="row pipeline-execution">
+		{{ pipeline_title }}
+	<div id="svg-container">
+	</div>
+	</div>
+	<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+	<script>
+		function customProgressDeNovo(progressBarElement, progressBarMessageElement, progress) {
+			console.log("In DeNovo update function.");
+			progressBarElement = document.getElementById("progress-bar-DeNovo");
+			progressBarMessageElement = document.getElementById("progress-message-DeNovo");
+			barIdentifier = progressBarElement.id.substring(12);
+			taskNumber = parseInt(progress.current);
+            taskPercentage = taskNumber / progress.total * 100;
+            console.log("DeNovo "+taskPercentage);
+            progressBarElement.style.backgroundColor = "#68a9ef";
+            progressBarElement.style.width = (2.2*taskPercentage)+"px";
+            progressBarMessageElement.style.width = 220+"px";
+            if (taskPercentage==100) {
+            	progressBarMessageElement.innerHTML = "Completed";
+        	} else {
+        		progressBarMessageElement.innerHTML = taskPercentage + "%\n" + "Waiting...";
+        	}
+		}
+		function customProgressDatabase(progressBarElement, progressBarMessageElement, progress) {
+			progressBarElement = document.getElementById("progress-bar-Database");
+			progressBarMessageElement = document.getElementById("progress-message-Database");
+			barIdentifier = progressBarElement.id.substring(12);
+			taskNumber = parseInt(progress.current);
+            taskPercentage = taskNumber / progress.total * 100;
+            console.log("Database "+taskPercentage);
+            progressBarElement.style.backgroundColor = "#68a9ef";
+            progressBarElement.style.width = (2.2*taskPercentage)+"px";
+            progressBarMessageElement.style.width = 220+"px";
+            if (taskPercentage==100) {
+            	progressBarMessageElement.innerHTML = "Completed";
+        	} else {
+        		progressBarMessageElement.innerHTML = taskPercentage + "%\n" + "Waiting...";
+        	}
+		}
+		document.addEventListener("DOMContentLoaded", function () {
+	  		var progressUrl_DeNovo = "{% url 'celery_progress:task_status' task_id_DeNovo %}";
+	  		console.log(progressUrl_DeNovo);
+	  		CeleryProgressBar.initProgressBar(progressUrl_DeNovo, {
+	  			onProgress: customProgressDeNovo,
+	  			progressBarId: "progress-bar-DeNovo"
+	  		});
+	  	});
+	  	document.addEventListener("DOMContentLoaded", function () {
+	  		var progressUrl_Database = "{% url 'celery_progress:task_status' task_id_Database %}";
+	  		console.log(progressUrl_Database);
+	  		CeleryProgressBar.initProgressBar(progressUrl_Database, {
+	  			onProgress: customProgressDatabase,
+	  			progressBarId: "progress-bar-Database"
+	  		});
+		});
+	</script>
+
+</div>
+	<script src="https://d3js.org/d3.v5.min.js" charset="utf-8"></script>
+	{% block custom_javascript %}
+	<script>
+		/*let node, progress_wrappers, pipeline_length, svg, pipeline_container;
+		const url = 'ws://'+window.location.host+'/ws/chat/';
+		let spectral_algo = document.getElementById("progress-bar-Spectral");
+		let denovo_algo = document.getElementById("progress-bar-DeNovo");
+		let database_algo = document.getElementById("progress-bar-Database");
+		const ws = new WebSocket(url);
+		ws.onopen = function(event) {
+			console.log("Connection is opened.");
+			ws.send("Thanks for connecting.");
+		}
+		ws.onclose = function(event) {
+			console.log(event);
+			console.log("Connection is closed.");
+		}
+		ws.onmessage = function(event) {
+			console.log(event);
+			console.log("Message is recieved.");
+		}
+		ws.onerror = function(event) {
+			console.log("Something went wrong.");
+		}*/
+	</script>
+	{% endblock custom_javascript %}
+	<script>
+		var algorithm_map = new Map();
+		function set_algorithm_map() {
+			algorithm_map.set("Spectral", "Spectral Extraction");
+			algorithm_map.set('DeNovoSequencingAlgorithm.exe', 'DeNovo Sequencing');
+			algorithm_map.set('DatabaseSearchAlgorithm.exe', 'Database Search');
+		}
+		function get_all_keys(algorithms_safe, first_iter) {
+			let algorithms = [];
+			let keys = Object.keys(algorithms_safe);
+			for (let i = 0; i < keys.length; i++) {
+				if (!first_iter)
+					algorithms.push(algorithm_map.get(keys[i]));
+				let v = algorithm_map.get(algorithms_safe[keys[i]]);
+				//if (JSON.stringify(v) === JSON.stringify(JSON.parse(JSON.stringify(v)))) {
+				//	algorithms.concat(get_all_keys(v));
+				//} else {
+					algorithms.push(v);
+				//}
+			}
+			console.log(algorithms);
+			return algorithms;
+		}
+		function update_algorithm_statuses(data) {
+			for (let i = 0; i < data.length; i++) {
+
+			}
+		}
+		function determine_nodes(algorithms) {
+			let nodes = []
+			for (let i = 0; i < algorithms.length; i++){
+				nodes.push({ name: algorithms[i] });
+			}
+			return nodes;
+		}
+		function determine_links(algorithms) {
+			let links = []
+			for (let i = 0; i < algorithms.length-1; i++){
+				links.push({ source: algorithms[i], target: algorithms[i+1], distance: 240 });
+			}
+			return links;
+		}
+
+
+		function load_pipeline_tree(initialize_map) {
+			//window.addEventListener('resize', render);
+			console.log("In the function.");
+			let algorithms_safe = {{ algorithms|safe }};
+			console.log(algorithms_safe);
+			if (initialize_map) {
+				set_algorithm_map();
+			} else {
+				d3.select("svg").remove();
+			}
+			pipeline_container = d3.select("#svg-container")
+						.attr("width", document.body.clientWidth)
+						.attr("height", 450 * algorithms_safe.length);
+			svg = d3.select("#svg-container")
+						.append("svg")
+						.attr("width", document.body.clientWidth)
+						.attr("height", 450 * algorithms_safe.length)
+						.attr("backgroundColor", "#6f36ff");
+			algorithm_progress = d3.select("body")
+						.append("div");
+			algorithm_message_progress = d3.select("body")
+						.append("div");
+			let nodeArray = determine_nodes(algorithms_safe);
+			let linkArray = determine_links(algorithms_safe);
+			let graph = { nodes: nodeArray, links: linkArray };
+			console.log("The algorithms are: ");
+			console.log(graph);
+			pipeline_length = nodeArray.length;
+			let simulation = d3.forceSimulation(graph.nodes)
+							.force(
+								"link",
+								d3.forceLink().id(function(d) {
+									return d.name;
+								})
+								.links(graph.links)
+							).on("tick", ticked);
+			node = svg.append("g")
+						.selectAll("circle")
+						.data(graph.nodes)
+						.enter()
+						.append("circle");
+
+			foreign_box = svg.selectAll("foreignObject")
+						.data(graph.nodes)
+						.enter()
+						.append("foreignObject")
+						.attr("width", "240px")
+						.attr("height", "360px");
+
+
+			special_box = foreign_box.selectAll("foreignObject")
+						.data(function(d) { return [d]; })
+						.enter()
+						.append("xhtml:div")
+						.attr("class", "wrapper-box")
+						.attr("border-radius", "50px")
+						.attr("style", "background: #aaa; width: 240px; height: 240px; border-radius: 10px; border-color: black;");
+
+			special_header = special_box.selectAll("header")
+								.data(function(d) { return [d]; })
+								.enter()
+								.append("header")
+								.attr("style", "text-align: center; color: #6f36ff; font-size: 23px; font-weight: 500; padding: 17px 30px; border-bottom: 1px solid #bfbfbf; border-color: black;")
+								.text(function(d) { return d.name; });
+
+			special_content = special_box.selectAll("div.wrapper-box")
+						.data(function(d) { return [d]; })
+						.enter()
+						.append("xhtml:div")
+						.attr("class", "wrapper_content");
+
+			progress_wrapper = special_content.selectAll("div")
+						.data(function(d) { return [d]; })
+						.enter()
+						.append("xhtml:div")
+						.attr("width", "140px")
+						.attr("height", "40px")
+						.attr("class", "progress-wrapper");
+
+			progress_bar = progress_wrapper.selectAll("div")
+						.data(function(d) { return [d]; })
+						.enter()
+						.append("xhtml:div")
+						.attr("id", function(d) {
+							console.log(d);
+							if (d.name.startsWith("Spectral")) {
+								return "progress-bar-Spectral";
+							} else if (d.name.startsWith("DeNovo")) {
+								return "progress-bar-DeNovo";
+							} else if (d.name.startsWith("Database")) {
+								return "progress-bar-Database";
+							}
+						})
+						.attr("style", "margin-left: 10px; background-color: rgb(104, 169, 239); height: 40px; width: 0px; top: 240px; left:345.5px;");
+			progress_message = progress_wrapper.append("div")
+						.attr("id", function(d) {
+							if (d.name.startsWith("Spectral")) {
+								return "progress-message-Spectral";
+							} else if (d.name.startsWith("DeNovo")) {
+								return "progress-message-DeNovo";
+							} else if (d.name.startsWith("Database")) {
+								return "progress-message-Database";
+							}
+						})
+						.attr("style", "padding-top: 40px; text-align: center;");
+
+			foreign_arrows = foreign_box.selectAll("div")
+						.data(graph.nodes)
+						.enter()
+						.append("xhtml:div")
+						.attr("class", "arrow");
+
+			foreign_arrows.selectAll("div")
+						.data(function(d) { return [[d, 1], [d, 2]]; })
+						.enter()
+						.append("xhtml:div")
+						.attr("class", function(d) {
+							if (d[1]==1) {
+								return "line";
+							} else if (d[1]==2) {
+								return "point";
+							}
+						});
+
+			icon_box = special_box.selectAll("foreignObject")
+						.data(function(d) { return [d]; })
+						.enter()
+						.append("xhtml:div")
+						.attr("width", "40px")
+						.attr("height", "40px")
+						.attr("class", "icon");
+
+			expand_box = icon_box.selectAll("div")
+						.data(function(d) { return [d]; })
+						.enter()
+						.append("xhtml:i")
+						.attr("class", "bx bx-move")
+						.text(function(d) { return "Expand"; });
+
+		}
+
+		function resize_graph() {
+			node.attr("x", function(d) {
+					return document.body.clientWidth/2;
+				})
+				.attr("y", function(d) {
+					return 100 + d.index * 360;
+				});
+			foreign_box.attr("transform", function(d) {
+				return "translate(" + (document.body.clientWidth/2 - 100) + "," + (80 + d.index * 360) + ")";
+			});
+			foreign_arrows.attr("x", function(d) {
+					return document.body.clientWidth/2 + 200;
+				})
+				.attr("y", function(d) {
+					return 130 + d.index * 6;
+				});
+			pipeline_container.attr("width", document.body.clientWidth)
+								.attr("height", 450 * 3);
+			svg.attr("width", document.body.clientWidth);
+		}
+		function ticked() {
+			node.attr("x", function(d) {
+					return document.body.clientWidth/2;
+				})
+				.attr("y", function(d) {
+					return 100 + d.index * 360;
+				});
+			special_box.attr("x", function(d) {
+					return document.body.clientWidth/2;
+				})
+				.attr("y", function(d) {
+					return 100 + d.index * 360;
+				});
+			foreign_box.attr("transform", function(d) {
+				return "translate(" + (document.body.clientWidth/2 - 100) + "," + (80 + d.index * 360) + ")";});
+			foreign_arrows.attr("x", function(d) {
+					return document.body.clientWidth/2 + 200;
+				})
+				.attr("y", function(d) {
+					return 170 + d.index * 360;
+				});
+			pipeline_container.attr("width", document.body.clientWidth);
+			svg.attr("width", document.body.clientWidth);
+		}
+	</script>
+	<!--<script src="{% static 'js/index.js' %}"></script>-->
+</section>
+{% endblock %}

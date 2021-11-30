@@ -10,7 +10,7 @@ import os.path
 import subprocess
 import json
 from pathlib import Path
-from bs4 import BeautifulSoup as bs
+#from bs4 import BeautifulSoup as bs
 from django.core.files import File
 from django.conf import settings
 from .thread import CreatePipelineTasks
@@ -72,8 +72,9 @@ def pipeline_execute_view(request, id):
         CreatePipelineTasks(obj.title, obj.algorithms, inputs, queue).start()
         print("Done creating pipeline tasks...")
         print(queue)
+        algorithm_size = len(obj.algorithms.split(","))
         while True:
-            flag = queue.empty()
+            flag = not (queue.qsize() == algorithm_size)
             if flag:
                 pass
             else:

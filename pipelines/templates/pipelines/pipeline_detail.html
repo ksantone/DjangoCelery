@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+<section id="pipelines-views" class="pipelines-views">
+<div class="pipeline-construction single-pipeline-container">
+<form method="POST" action="{% url 'pipelines:pipeline_execute_view' object.id %}" enctype="multipart/form-data">
+<div class="row">
+	<div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+	<div class="form-container col-xl-10 col-lg-10 col-md-10 col-sm-10 col-xs-10">
+		<p>{{ object.title }} Pipeline!</p>
+		<h3>Set Pipeline Parameters Below!</h3>
+		    <div class="inputBox">
+		    	<label style="width:20%">Run Name:</label>
+		        <input style="width:75%" type="text" placeholder="Execution Name...">
+		    </div>
+		    <div class="inputBox">
+		    	<label style="width:20%">Output Folder:</label>
+		        <input style="width:75%" type="text" placeholder="Output Folder...">
+		    </div>
+	</div>
+	<div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+</div>
+<div class="row pipeline-file-selection">
+	<div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+	{% csrf_token %}
+	{% for input in inputs %}
+		{% ifequal input "SampleData" %}
+		<div class="form-container col-xl-3 col-lg-3 col-md-3 col-sm-3 col-xs-3">
+			<input type="file" name="SampleDataFile" id="real-sample-data-file" style="display: none;" accept=".mzML, .RAW" required />
+			<button type="button" id="custom-sample-data-button">Add Mass Spec Run</button>
+			<br/>
+			<br/>
+			<select id="sample_data_list" name="sample_data_list" size="5" multiple>
+				<option> </option>
+			</select>
+			<table class="table table-bordered" id="sample_data_files">
+			</table>
+			<!--<input class="upload-box" type="file" name="SampleDataFile" id="sample-data-file" required>-->
+		</div>
+		{% endifequal %}
+		{% ifequal input "SpectralLibrary" %}
+		<div class="form-container col-xl-3 col-lg-3 col-md-3 col-sm-3 col-xs-3">
+			<input type="file" name="SpecLibFile" id="real-spec-lib-file" style="display: none;" accept=".mzML" />
+			<button type="button" id="custom-spec-lib-button">Add Spectral Library</button>
+			<br/>
+			<br/>
+			<select name="spec_lib_list" id="spec_lib_list" size="5" multiple>
+				<option> </option>
+			</select>
+			<table class="table table-bordered" id="spec_lib_files">
+			</table>
+		</div>
+		{% endifequal %}
+		{% ifequal input "iRTs" %}
+		<div class="form-container col-xl-3 col-lg-3 col-md-3 col-sm-3 col-xs-3">
+			<input type="file" name="iRTsFile" id="real-irts-file" style="display: none;" accept=".pqp" />
+			<button type="button" id="custom-irts-button">Add iRT Library</button>
+			<br/>
+			<br/>
+			<select name="irts_list" id="irts_list" size="5" multiple>
+				<option> </option>
+			</select>
+			<table class="table table-bordered" id="irt_files">
+			</table>
+		</div>
+		{% endifequal %}
+	{% endfor %}
+	<div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+</div>
+<div class="row">
+	<div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+	<div class="col-xl-10 col-lg-10 col-md-10 col-sm-10 col-xs-10">
+		<button class="btn btn-primary" type="submit">Run Pipeline!</button>
+	</div>
+	<div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+</div>
+</form>
+</div>
+</section>
+<script src="{% static 'js/pipeline-construction.js' %}" defer></script>
+
+{% endblock %}
