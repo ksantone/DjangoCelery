@@ -58,12 +58,12 @@ class CreatePipelineTasks(threading.Thread):
             #algorithms_to_task_ids["Spectral"] = processor.task_id
             print("Why?")
             print(processes)
-            r = redis.Redis(host='127.0.0.1', port=6379)
+            r = redis.Redis(host='redis', port=6379)
             print(r)
             r.set("DeNovo", "Incomplete")
             r.set("Database", "Incomplete")
             for process in processes:
-                task = run_pipeline.delay(process[0], r)
+                task = run_pipeline.delay(process[0])#, r)
                 print(process[0])
                 algorithms_to_task_ids[process[0].split("/")[-1]] = task.task_id
                 self.queue.put(algorithms_to_task_ids)
@@ -128,13 +128,21 @@ def add_algorithm_to_file(algorithm, processes):
         processes.append([algorithm_reqs[0]])
 
 @shared_task(bind=True)
-def run_pipeline(self, process, r):
+def run_pipeline(self, process):
     print("Inside")
+    r = redis.Redis(host='redis', port=6379)
+    print(process)
     if process.split("/")[-1]=="DeNovoSequencingAlgorithm.exe":
+        print("A")
+        print(process)
         m = 5
     else:
+        print("B")
+        print(process)
         while r.get("DeNovo")=="Incomplete":
             m = 6
+    print("C")
+    print(process)
     progress_recorder = ProgressRecorder(self)
     for i in range(10):
         sleep(10)
