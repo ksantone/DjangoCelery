@@ -8,7 +8,7 @@ from django.core.files import File
 from django.conf import settings
 from queue import Queue
 
-#from .DeNovo import run_denovo
+from .DeNovo import run_denovo
 from celery import shared_task
 #from celery.task import Task
 from celery_progress.backend import ProgressRecorder
@@ -131,24 +131,28 @@ def add_algorithm_to_file(algorithm, processes):
 def run_pipeline(self, process):
     print("Inside")
     r = redis.Redis(host='redis', port=6379)
-    print(process)
     if process.split("/")[-1]=="DeNovoSequencingAlgorithm.exe":
-        print("A")
-        print(process)
         m = 5
     else:
         print("B")
-        print(process)
-        while r.get("DeNovo")=="Incomplete":
+        print(r.get("DeNovo")==b"Incomplete")
+        while r.get("DeNovo")==b"Incomplete":
             m = 6
     print("C")
-    print(process)
     progress_recorder = ProgressRecorder(self)
-    for i in range(10):
-        sleep(10)
-        progress_recorder.set_progress(i+1, 10, f'On iteration {i}.')
-        print(i)
-    r.set("DeNovo")=="Complete"
+    if process.split("/")[-1]=="DeNovoSequencingAlgorithm.exe":
+        th = threading.Thread(target=run_denovo.run_denovo_func)
+        th.start()
+        while th.is_alive():
+            # Check number of lines in progress.txt
+            num_lines = sum(1 for line in open("/usr/src/app/progress.txt"))
+            progress_recorder.set_progress(num_lines, 371, f'On thread {num_lines}.')
+        r.set("DeNovo", "Complete")
+    else:
+        for i in range(10):
+            sleep(10)
+            progress_recorder.set_progress(i+1, 10, f'On iteration {i}.')
+            print(i)
     return "Done"
     '''print(process)
     if len(process)==2:
