@@ -146,8 +146,6 @@ def run_pipeline(self, process):
         while th.is_alive():
             # Check number of lines in progress.txt
             num_lines = sum(1 for line in open("/usr/src/app/progress.txt"))
-            print("Num lines is:")
-            print(num_lines)
             progress_recorder.set_progress(num_lines, 371, f'On thread {num_lines}.')
         r.set("DeNovo", "Complete")
     else:
