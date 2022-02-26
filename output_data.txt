@@ -1,6 +1,3 @@
-K
-(44, 53) 
-End of current charge...
-K
-(44, 53) 
+E
+(85, 122) 
 End of current charge...
