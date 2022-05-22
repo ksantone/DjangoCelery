@@ -130,11 +130,13 @@
 	<script>
 		var algorithm_map = new Map();
 		function set_algorithm_map() {
+			console.log("In set_algorithm_map function");
 			algorithm_map.set("Spectral", "Spectral Extraction");
 			algorithm_map.set('DeNovoSequencingAlgorithm.exe', 'DeNovo Sequencing');
 			algorithm_map.set('DatabaseSearchAlgorithm.exe', 'Database Search');
 		}
 		function get_all_keys(algorithms_safe, first_iter) {
+			console.log("In get_all_keys function");
 			let algorithms = [];
 			let keys = Object.keys(algorithms_safe);
 			for (let i = 0; i < keys.length; i++) {
@@ -151,11 +153,13 @@
 			return algorithms;
 		}
 		function update_algorithm_statuses(data) {
+			console.log("In update_algorithm_statuses function");
 			for (let i = 0; i < data.length; i++) {
 
 			}
 		}
 		function determine_nodes(algorithms) {
+			console.log("In determine_nodes function");
 			let nodes = []
 			for (let i = 0; i < algorithms.length; i++){
 				nodes.push({ name: algorithms[i] });
@@ -163,6 +167,7 @@
 			return nodes;
 		}
 		function determine_links(algorithms) {
+			console.log("In determine_links function");
 			let links = []
 			for (let i = 0; i < algorithms.length-1; i++){
 				links.push({ source: algorithms[i], target: algorithms[i+1], distance: 240 });

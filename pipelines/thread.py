@@ -9,6 +9,7 @@ from django.conf import settings
 from queue import Queue
 
 from .DeNovo import run_denovo
+from .MzMLProcessor import MzMLProcessor
 from celery import shared_task
 #from celery.task import Task
 from celery_progress.backend import ProgressRecorder
@@ -52,6 +53,7 @@ class CreatePipelineTasks(threading.Thread):
             #execute_algorithm_and_update_progress.delay()
             #processor = Processor.delay(mzml_contents)
             processes = begin_pipeline_execution(self.title, self.algorithms, self.inputs)
+            print(processes)
             tasks = []
             print("After, after...")
             algorithms_to_task_ids = {}
@@ -59,11 +61,20 @@ class CreatePipelineTasks(threading.Thread):
             print("Why?")
             print(processes)
             r = redis.Redis(host='redis', port=6379)
+            print("How?")
             print(r)
+            if self.title=="Discovery Omics":
+                r.set("SpectralExtraction", "Complete")
+            elif self.title=="Discovery Omics 2":
+                r.set("SpectralExtraction", "Incomplete")
             r.set("DeNovo", "Incomplete")
             r.set("Database", "Incomplete")
             for process in processes:
-                task = run_pipeline.delay(process[0])#, r)
+                print("Just before...")
+                print(process)
+                #print(self.inputs)
+                task = run_pipeline.delay(process[0])#, self.inputs)#, r)
+                print("???")
                 print(process[0])
                 algorithms_to_task_ids[process[0].split("/")[-1]] = task.task_id
                 self.queue.put(algorithms_to_task_ids)
@@ -117,7 +128,7 @@ def begin_pipeline_execution(title, algorithms, inputs):
 
 def add_algorithm_to_file(algorithm, processes):
     print("Just in...")
-    algorithm_to_executable = {"DeNovo": "DeNovoSequencingAlgorithm.exe", "Database": "DatabaseSearchAlgorithm.exe", "FDR": "FDR.exe"}
+    algorithm_to_executable = {"SpectralExtraction": "SpectralExtraction.exe", "DeNovo": "DeNovoSequencingAlgorithm.exe", "Database": "DatabaseSearchAlgorithm.exe", "FDR": "FDR.exe"}
     print("Huh?")
     print(algorithm_to_executable)
     algorithm_reqs = [settings.STATICFILES_DIRS[0]+"/algorithms/"+algorithm_to_executable[algorithm]]
@@ -128,19 +139,33 @@ def add_algorithm_to_file(algorithm, processes):
         processes.append([algorithm_reqs[0]])
 
 @shared_task(bind=True)
-def run_pipeline(self, process):
+def run_pipeline(self, process):#, inputs):
     print("Inside")
     r = redis.Redis(host='redis', port=6379)
-    if process.split("/")[-1]=="DeNovoSequencingAlgorithm.exe":
+    if process.split("/")[-1]=="SpectralExtraction.exe":
         m = 5
+    elif process.split("/")[-1]=="DeNovoSequencingAlgorithm.exe":
+        print("C")
+        print(r.get("SpectralExtraction")==b"Incomplete")
+        while r.get("SpectralExtraction")==b"Incomplete":
+            m = 6
+        m = 7
     else:
         print("B")
         print(r.get("DeNovo")==b"Incomplete")
         while r.get("DeNovo")==b"Incomplete":
-            m = 6
+            m = 8
     print("C")
     progress_recorder = ProgressRecorder(self)
-    if process.split("/")[-1]=="DeNovoSequencingAlgorithm.exe":
+    if process.split("/")[-1]=="SpectralExtraction.exe":
+        processor = MzMLProcessor.Processor()
+        print(inputs)
+        f = open("C:\\Users\\Kassim Santone\\Desktop\\20190218_QExHFX2_RSLC4_PST_25ngHeLa_1ulloop_PepMap_1hr_60k_03.mzML")
+        progress_recorder.set_progress(0, 10, f'On iteration {0}.')
+        processor.run(f.read())
+        progress_recorder.set_progress(10, 10, f'On iteration {10}.')
+        r.set("SpectralExtraction", "Complete")
+    elif process.split("/")[-1]=="DeNovoSequencingAlgorithm.exe":
         th = threading.Thread(target=run_denovo.run_denovo_func)
         th.start()
         while th.is_alive():

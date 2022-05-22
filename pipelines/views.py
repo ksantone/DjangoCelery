@@ -74,12 +74,13 @@ def pipeline_execute_view(request, id):
         print(queue)
         algorithm_size = len(obj.algorithms.split(","))
         while True:
+            print("In while...")
             flag = not (queue.qsize() == algorithm_size)
             if flag:
                 pass
             else:
                 print("In else statement")
-                algorithm_to_executable = {"DeNovo": "DeNovoSequencingAlgorithm.exe", "Database": "DatabaseSearchAlgorithm.exe"}#, "FDR": "FDR.exe"}
+                algorithm_to_executable = {"SpectralExtraction": "SpectralExtraction.exe", "DeNovo": "DeNovoSequencingAlgorithm.exe", "Database": "DatabaseSearchAlgorithm.exe"}#, "FDR": "FDR.exe"}
                 algorithms_to_task_ids = queue.get()
                 print(algorithms_to_task_ids)
                 print(context["algorithms"])
