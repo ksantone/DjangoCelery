@@ -131,4 +131,11 @@
         </spectrum>
     </run>
   </mzML>
+  <indexList count="1">
+  <index name="spectrum">
+    <offset idRef="controllerType=0 controllerNumber=1 scan=2834">143458701</offset>
+  </index>
+  </indexList>
+  <indexListOffset>1653782540</indexListOffset>
+  <fileChecksum>d1fa7efc1bbdf03a1ec94b8ea9fffc89e0cdd1bb</fileChecksum>
 </indexedmzML>
